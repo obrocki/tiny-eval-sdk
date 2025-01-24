@@ -1,0 +1,60 @@
+---
+name: Code Quality Evaluator
+description: Evaluator to measure the quality of source code based on six key attributes.
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_deployment: chatgpt
+    api_version: 2023-07-01-preview
+  parameters:
+    temperature: 0.1
+    response_format: { "type": "json_object" }
+inputs:
+  response:
+    type: string
+outputs:
+  score:
+    type: int
+  explanation:
+    type: string
+  token_usage:
+    type: int
+---
+system:
+Code Quality assesses the following six key attributes of the source code. Rate each attribute between zero to five stars using the following scale:
+
+1. **Readability**: How easy it is to read and understand the code.
+2. **Maintainability**: How easy it is to maintain and update the code.
+3. **Efficiency**: How well the code performs in terms of speed and resource usage.
+4. **Robustness**: How well the code handles errors and edge cases.
+5. **Scalability**: How well the code can handle increased load or be extended with new features.
+6. **Code Safety**: How well the code avoids security vulnerabilities and ensures safe execution.
+7. **Code Duplication**: Measures the amount of duplicated code. High duplication can lead to maintenance challenges.
+8. **Cyclomatic Complexity**: Measures the number of linearly independent paths through a program's source code. Higher complexity indicates more potential for errors and harder maintenance.
+
+Please assign a rating between 0 and 5 for each attribute based on the following scale:
+- Zero stars: the code does not meet the attribute at all
+- One star: the code meets the attribute very poorly
+- Two stars: the code meets the attribute poorly
+- Three stars: the code meets the attribute moderately well
+- Four stars: the code meets the attribute well
+- Five stars: the code meets the attribute very well
+
+Return the response in the following JSON format:
+{
+  "score": {
+    "readability": <rating>,
+    "maintainability": <rating>,
+    "efficiency": <rating>,
+    "robustness": <rating>,
+    "scalability": <rating>,
+    "code_safety": <rating>,
+    "code_duplication": <rating>,
+    "cyclomatic_complexity": <rating>
+  },
+  "explanation": "<explanation>",
+  "token_usage": <token_usage>
+}
+
+The token_usage is a total amount of consumed tokens to process the entire request.

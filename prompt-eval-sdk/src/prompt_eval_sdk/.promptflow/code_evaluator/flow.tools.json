@@ -1,0 +1,15 @@
+{
+  "package": {},
+  "code": {
+    "code_evaluator.prompty": {
+      "type": "llm",
+      "inputs": {
+        "response": {
+          "type": [
+            "string"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,187 @@
+{% extends 'baseWithLogger.html' %}
+
+{% block title %}
+  Async Table View
+{% endblock %}
+
+{% block script %}
+<script> 
+  function uploadData() {
+    const fileInput = document.getElementById('csv-file')
+    if (fileInput.files.length === 0) {
+      alert('Please select a file before uploading.')
+      return
+    }
+  
+    logMessage('Uploading data...')
+    const formData = new FormData(document.getElementById('upload-form'))
+    fetch('/upload-data/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: formData
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          location.reload()
+          logMessage('Data uploaded successfully!')
+        } else {
+          alert('Error uploading data: ' + data.error)
+        }
+      })
+      .catch((error) => {
+        alert('Error uploading data: ' + error)
+      })
+  }
+  
+  function executeAsyncOperation(row) {
+    const textFieldValue = document.getElementById('text-' + row).value
+    const statusElement = document.getElementById('status-' + row)
+    const resultElement = document.getElementById('result-' + row)
+    statusElement.innerText = 'Operation started...'
+  
+    logMessage(`Async operation started for row ${row}`)
+    fetch('/async-operation/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ text: textFieldValue })
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        statusElement.innerText = 'Completed in ' + data.delay + ' seconds'
+        resultElement.innerText = data.result
+      })
+      .catch((error) => {
+        logger.exception('Error occurred during async operation:', error)
+        statusElement.innerText = 'Error: ' + error
+      })
+  }
+  
+  function saveAll() {
+    const rows = document.querySelectorAll('tbody tr')
+    const data = Array.from(rows).map((row) => {
+      const rowNumber = row.querySelector('td:nth-child(1)').innerText
+      const textField = row.querySelector('input[type="text"]').value
+      const status = row.querySelector('td:nth-child(5)').innerText
+      const result = row.querySelector('td:nth-child(6)').innerText
+      return { row_number: rowNumber, text_field: textField, status: status, result: result }
+    })
+  
+    fetch('/save-all/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ data: data })
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        alert('Data saved successfully!')
+      })
+      .catch((error) => {
+        alert('Error saving data: ' + error)
+      })
+  }
+  
+  function resetAll() {
+    fetch('/reset-all/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        location.reload()
+      })
+      .catch((error) => {
+        alert('Error resetting data: ' + error)
+      })
+  }
+  
+  function exportAll() {
+    const rows = document.querySelectorAll('tbody tr')
+    const data = Array.from(rows).map((row) => {
+      const rowNumber = row.querySelector('td:nth-child(1)').innerText
+      const textField = row.querySelector('input[type="text"]').value
+      const status = row.querySelector('td:nth-child(4)').innerText
+      const result = row.querySelector('td:nth-child(5)').innerText
+      return { row_number: rowNumber, text_field: textField, status: status, result: result }
+    })
+  
+    const json = JSON.stringify(data, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'grid_data.json'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+  
+  window.onload = function () {
+    const statusElements = document.querySelectorAll('[id^="status-"]')
+    statusElements.forEach((element) => {
+      element.innerText = 'Pending'
+    })
+  }
+</script>
+{% endblock %}
+
+{% block content %}
+  <div>
+    <form id="upload-form" enctype="multipart/form-data" method="post">
+      {% csrf_token %}
+      <input type="file" id="csv-file" name="csv-file" accept=".csv" style="zoom: 1.2;" />
+      <button type="button" class="upload-button" onclick="uploadData()">⬆️ Upload Data from CSV</button>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th class="row-number">Row Number</th>
+          <th class="row-number">ID</th>
+          <th>Text Field</th>
+          <th>Action</th>
+          <th>Status</th>
+          <th>Result</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in grid_data %}
+          <tr>
+            <td>{{ row.row_number }}</td>
+            <td>{{ row.id }}</td>
+            <td>
+              <input type="text" id="text-{{ row.row_number }}" value="{{ row.text_field }}" />
+            </td>
+            <td>
+              <button onclick="executeAsyncOperation({{ row.row_number }})">✨ Execute</button>
+            </td>
+            <td id="status-{{ row.row_number }}">{{ row.status }}</td>
+            <td id="result-{{ row.row_number }}">{{ row.result }}</td>
+            <td>
+              <a href="{% url 'grid_detail' row.id %}">
+                {{row.id}}
+            </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="button-container">
+      <button class="save-button" onclick="saveAll()">💾 Save to Azure DB</button>
+
+      <button class="export-button" onclick="exportAll()">📤 Export as JSON</button>
+
+      <button class="reset-button" onclick="resetAll()">🔁 Reset</button>
+    </div>
+  </div>
+{% endblock %}

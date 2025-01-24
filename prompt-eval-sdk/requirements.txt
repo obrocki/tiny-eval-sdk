@@ -1,0 +1,7 @@
+azure-ai-evaluation
+promptflow
+promptflow-tools
+requests
+pytest
+pytest-mock
+setuptools

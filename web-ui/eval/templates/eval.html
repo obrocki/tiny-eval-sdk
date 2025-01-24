@@ -1,0 +1,315 @@
+{% extends 'baseWithLogger.html' %}
+
+{% block title %}
+  Evaluate
+{% endblock %}
+
+{% block script %}
+  <script>
+    function uploadData() {
+      const fileInput = document.getElementById('csv-file')
+      if (fileInput.files.length === 0) {
+        alert('Please select a file before uploading.')
+        return
+      }
+
+      logMessage('Uploading data...')
+      const formData = new FormData(document.getElementById('upload-form'))
+      fetch('/eval/upload-data/', {  // Ensure the URL ends with a trailing slash
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === 'success') {
+            location.reload()
+            logMessage('Data uploaded successfully!')
+          } else {
+            alert('Error uploading data: ' + data.error)
+          }
+        })
+        .catch((error) => {
+          alert('Error uploading data: ' + error)
+        })
+    }
+
+    function uploadCode() {
+      const fileInput = document.getElementById('code-file')
+      if (fileInput.files.length === 0) {
+        alert('Please select a file or folder before uploading.')
+        return
+      }
+
+      logMessage('Uploading data...')
+      const formData = new FormData(document.getElementById('upload-form2'))
+      const files = fileInput.files
+      const fileContents = []
+
+      const readFile = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            resolve({ name: file.name, content: event.target.result })
+          }
+          reader.onerror = (error) => reject(error)
+          reader.readAsText(file)
+        })
+      }
+
+      const readAllFiles = async () => {
+        for (const file of files) {
+          try {
+            const fileContent = await readFile(file)
+            fileContents.push(fileContent)
+          } catch (error) {
+            alert('Error reading file: ' + file.name)
+            return
+          }
+        }
+
+        fetch('/eval/analyse-code/', {  // Ensure the URL ends with a trailing slash
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ files: fileContents })
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          const tableBody = document.getElementById('code-analysis-results-body')
+          tableBody.innerHTML = ''
+  
+          data.result.forEach((file, index) => {
+            const row = document.createElement('tr')
+  
+            const indexCell = document.createElement('td')
+            indexCell.textContent = index + 1
+            row.appendChild(indexCell)
+  
+            const nameCell = document.createElement('td')
+            nameCell.textContent = file.name
+            row.appendChild(nameCell)
+  
+            const resultCell = document.createElement('td')
+            resultCell.classList.add('wide-column')
+            const score = file.result.score
+            resultCell.innerHTML = `
+              <strong>Readability:</strong> ${score.readability}<br>
+              <strong>Maintainability:</strong> ${score.maintainability}<br>
+              <strong>Efficiency:</strong> ${score.efficiency}<br>
+              <strong>Robustness:</strong> ${score.robustness}<br>
+              <strong>Scalability:</strong> ${score.scalability}<br>
+              <strong>Code Safety:</strong> ${score.code_safety}<br>
+              <strong>Code Duplication:</strong> ${score.code_duplication}<br>
+              <strong>Cyclomatic Complexity:</strong> ${score.cyclomatic_complexity}
+            `
+            row.appendChild(resultCell)
+  
+            const explanationCell = document.createElement('td')
+            explanationCell.innerHTML = `<div class="small sm">${file.result.explanation}</div>`
+            row.appendChild(explanationCell)
+            
+            const tokenUsageCell = document.createElement('td')
+            tokenUsageCell.textContent = file.result.token_usage
+            row.appendChild(tokenUsageCell)
+
+            tableBody.appendChild(row)
+          })
+        })
+        .catch((error) => {
+          alert('Error uploading data: ' + error)
+        })
+      }
+
+      readAllFiles()
+    }
+
+    function executeAllAsyncOperations() {
+      const rows = document.querySelectorAll('tr')
+      for (let i = 0; i < rows.length; i++) {
+        executeAsyncOperation(i)
+      }
+    }
+
+    function executeAsyncOperation(row) {
+      const evalQuery = document.getElementById('eval-query-' + row).value
+      const evalResponse = document.getElementById('eval-response-' + row).value
+      const groundTruth = document.getElementById('ground-truth-' + row).value
+      const statusElement = document.getElementById('status-' + row)
+      const resultElement = document.getElementById('result-' + row)
+      statusElement.innerText = 'Operation started...'
+
+      logMessage(`Async operation started for row ${row}`)
+      fetch('/eval/async-operation/', {  // Ensure the URL ends with a trailing slash
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ eval_query: evalQuery, eval_response: evalResponse, ground_truth: groundTruth })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          statusElement.innerText = 'Completed in ' + data.duration + '.'
+          const eval_result = data.result;
+          console.log('Type of data.result:', typeof eval_result);
+          console.log('Content of data.result:', eval_result);
+          resultElement.innerHTML = `
+            <div>Relevance: <strong>${eval_result.relevance} / 5</strong></div>
+            <div>Coherence: <strong>${eval_result.coherence} / 5</strong></div>
+            <div>Similarity: <strong>${eval_result.similarity} / 5</strong></div>
+          `;
+        })
+        .catch((error) => {
+          logMessage('Error occurred during async operation:', error)
+          statusElement.innerText = 'Error: ' + error
+        })
+    }
+
+    function saveAll() {
+      const rows = document.querySelectorAll('tbody tr')
+      const data = Array.from(rows).map((row) => {
+        const rowNumber = row.querySelector('td:nth-child(1)').innerText
+        const id = row.querySelector('td:nth-child(2)').innerText
+        const evalQuery = row.querySelector('textarea[id^="eval-query"]').value
+        const evalResponse = row.querySelector('textarea[id^="eval-response"]').value
+        const groundTruth = row.querySelector('textarea[id^="ground-truth"]').value
+        const status = row.querySelector('td:nth-child(7)').innerText
+        const result = row.querySelector('td:nth-child(8)').innerText
+        return { row_number: rowNumber, id: id, eval_query: evalQuery, eval_response: evalResponse, ground_truth: groundTruth, status: status, result: result }
+      })
+      fetch('/eval/save-all/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ data: data })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          alert('Data saved successfully!')
+        })
+        .catch((error) => {
+          alert('Error saving data: ' + error)
+        })
+    }
+
+    function resetAll() {
+      fetch('/eval/reset-all/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          location.reload()
+        })
+        .catch((error) => {
+          alert('Error resetting data: ' + error)
+        })
+    }
+    
+    function exportAll() {
+      const rows = document.querySelectorAll('tbody tr')
+      const data = Array.from(rows).map((row) => {
+        const rowNumber = row.querySelector('td:nth-child(1)').innerText
+        const id = row.querySelector('td:nth-child(2)').innerText
+        const evalQuery = row.querySelector('textarea[id^="eval-query"]').value
+        const evalResponse = row.querySelector('textarea[id^="eval-response"]').value
+        const groundTruth = row.querySelector('textarea[id^="ground-truth"]').value
+        const status = row.querySelector('td:nth-child(7)').innerText
+        const result = row.querySelector('td:nth-child(8)').innerText
+        return { row_number: rowNumber, id: id, eval_query: evalQuery, eval_response: evalResponse, ground_truth: groundTruth, status: status, result: result }
+      })
+    
+      const json = JSON.stringify(data, null, 2)
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'grid_data.json'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
+  </script>
+{% endblock %}
+
+{% block content %}
+  <h2>Build-in Evaluators</h2>
+  <form id="upload-form" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" id="csv-file" name="csv-file" accept=".csv" style="zoom: 1.1;" />
+    <button type="button" class="upload-button" onclick="uploadData()">⬆️ Upload Data from CSV</button>
+  </form>
+  
+  <table>
+    <thead>
+      <tr>
+        <th class="row-number small sm">Row Number</th>
+        <th class="row-number small sm">ID</th>
+        <th>Eval Query</th>
+        <th>Eval Response</th>
+        <th>Ground Truth</th>
+        <th>Action <button class="button small " onclick="executeAllAsyncOperations()">Run All</button></th>
+        <th>Status</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in grid_data %}
+        <tr>
+          <td class="row-number small sm">{{ row.row_number }}</td>
+          <td class="row-number small sm">{{ row.id }}</td>
+          <td>
+            <textarea id="eval-query-{{ row.row_number }}" rows="3" cols="30">{{ row.eval_query }}</textarea>
+          </td>
+          <td>
+            <textarea id="eval-response-{{ row.row_number }}" rows="3" cols="30">{{ row.eval_response }}</textarea>
+          </td>
+          <td>
+            <textarea id="ground-truth-{{ row.row_number }}" rows="3" cols="30">{{ row.ground_truth }}</textarea>
+          </td>
+          <td>
+            <button class="button small" onclick="executeAsyncOperation({{ row.row_number }})">✨ Evaluate</button>
+          </td>
+          <td id="status-{{ row.row_number }}">{{ row.status }}</td>
+          <td id="result-{{ row.row_number }}">{{ row.result }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="button-container">
+    <button class="save-button" onclick="saveAll()">💾 Save to Azure DB</button>
+    <button class="export-button" onclick="exportAll()">📤 Export as CSV</button>
+    <button class="reset-button" onclick="resetAll()"> 🔁 Reset</button>
+  </div>
+
+  <hr class="separator" style="margin: 20px 0; border: 1px solid #ccc;"/>
+
+  <h2>Code Analysis</h2>
+  <form id="upload-form2" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" id="code-file" name="code-file" accept=".py,.cs" style="zoom: 1.1;" placeholder="Select source code file for analysis" />
+    <button type="button" class="upload-button" onclick="uploadCode()">⬆️ Upload Code for Analysis</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th class="row-number small sm">File Index</th>
+        <th>File Name</th>
+        <th>Score</th>
+        <th>Explanation</th>
+        <th>Tokens Used</th>
+      </tr>
+    </thead>
+    <tbody id="code-analysis-results-body">
+      <!-- Results will be dynamically inserted here -->
+    </tbody>
+  </table>
+{% endblock %}
