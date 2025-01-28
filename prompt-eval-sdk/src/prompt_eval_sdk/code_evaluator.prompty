@@ -6,7 +6,7 @@ model:
   configuration:
     type: azure_openai
     azure_deployment: chatgpt
-    api_version: 2023-07-01-preview
+    api_version: 2024-05-01-preview
   parameters:
     temperature: 0.1
     response_format: { "type": "json_object" }
@@ -41,6 +41,9 @@ Please assign a rating between 0 and 5 for each attribute based on the following
 - Four stars: the code meets the attribute well
 - Five stars: the code meets the attribute very well
 
+The `token_usage` is a total amount of consumed tokens to process the entire request. The token_usage is a measure of the computational cost of the evaluation.
+Limit the `description` to 200 words, be very precises and clear about the result.
+
 Return the response in the following JSON format:
 {
   "score": {
@@ -57,4 +60,3 @@ Return the response in the following JSON format:
   "token_usage": <token_usage>
 }
 
-The token_usage is a total amount of consumed tokens to process the entire request.
