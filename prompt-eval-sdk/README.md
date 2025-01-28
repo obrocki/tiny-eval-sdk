@@ -19,28 +19,37 @@ The Prompt Evaluation SDK is a Python library designed to facilitate the evaluat
     ```
 
 2. **Install dependencies**:
-```
-poetry install
-```
+    ```sh
+    poetry install
+    ```
 
 3. **Build the package**:
-```
-poetry build
-```
+    ```sh
+    poetry build
+    ```
 
 4. **Install the package**:
-```
-poetry install
-```
+    ```sh
+    poetry install
+    ```
 
 ## Usage
 
-To evaluate AI prompts using the SDK:
+To evaluate AI prompts using the SDK in a Jupyter notebook:
 
-```python
-from prompt_eval_sdk.evaluation import Evaluation
+1. **Launch Jupyter Notebook**:
+    ```sh
+    jupyter notebook
+    ```
 
-evaluation = Evaluation()
-relevance = evaluation.evaluate_relevance('your_query', 'your_response')
-coherence = evaluation.evaluate_coherance('your_query', 'your_response')
-similarity = evaluation.evaluate_similarity('your_query', 'your_response', 'your_ground_truth')
+2. **Create a new notebook** and import the SDK:
+    ```python
+    from prompt_eval_sdk.evaluation import Evaluation
+
+    evaluation = Evaluation()
+    relevance = evaluation.evaluate_relevance('your_query', 'your_response')
+    coherence = evaluation.evaluate_coherance('your_query', 'your_response')
+    similarity = evaluation.evaluate_similarity('your_query', 'your_response', 'your_ground_truth')
+    ```
+
+3. **Run the cells** to evaluate the prompts and view the results directly in the notebook.
