@@ -1,0 +1,24 @@
+[project]
+name = "prompt-eval-sdk"
+version = "0.0.3"
+description = "Tiny wrapper around prompt evaluation sdk"
+authors = [
+    {name = "Dawid Obrocki"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "azure-ai-evaluation",
+    "promptflow",
+    "promptflow-tools",
+    "requests"
+]
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-mock = "*"
+setuptools = "*"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

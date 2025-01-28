@@ -19,19 +19,19 @@ The Prompt Evaluation SDK is a Python library designed to facilitate the evaluat
     ```
 
 2. **Install dependencies**:
-    ```sh
-    pip install -r requirements.txt
-    ```
+```
+poetry install
+```
 
-3. **Build the SDK**:
-    ```sh
-    python setup.py sdist bdist_wheel
-    ```
+3. **Build the package**:
+```
+poetry build
+```
 
-4. **Install the SDK**:
-    ```sh
-    pip install dist/prompt_eval_sdk-0.0.1-py3-none-any.whl --force-reinstall
-    ```
+4. **Install the package**:
+```
+poetry install
+```
 
 ## Usage
 
