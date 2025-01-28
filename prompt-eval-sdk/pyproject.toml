@@ -1,23 +1,24 @@
 [project]
 name = "prompt-eval-sdk"
-version = "0.0.3"
+version = "0.0.4"
 description = "Tiny wrapper around prompt evaluation sdk"
 authors = [
     {name = "Dawid Obrocki"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "azure-ai-evaluation",
     "promptflow",
-    "promptflow-tools",
-    "requests"
+    "pickleshare",
+    "numpy"
 ]
 
-[tool.poetry.dev-dependencies]
+[poetry.group.dev.dependencies]
 pytest = "*"
 pytest-mock = "*"
 setuptools = "*"
+python-dotenv = "*"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
