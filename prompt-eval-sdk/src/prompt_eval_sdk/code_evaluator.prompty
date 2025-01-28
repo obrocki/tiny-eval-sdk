@@ -1,6 +1,6 @@
 ---
 name: Code Quality Evaluator
-description: Evaluator to measure the quality of source code based on six key attributes.
+description: Evaluator to measure the quality of source code based on eight key attributes.
 model:
   api: chat
   configuration:
@@ -22,16 +22,16 @@ outputs:
     type: int
 ---
 system:
-Code Quality assesses the following six key attributes of the source code. Rate each attribute between zero to five stars using the following scale:
+Code Quality assesses the following eight key attributes of the source code. Rate each attribute between zero to five stars using the following scale:
 
-1. **Readability**: How easy it is to read and understand the code.
-2. **Maintainability**: How easy it is to maintain and update the code.
-3. **Efficiency**: How well the code performs in terms of speed and resource usage.
-4. **Robustness**: How well the code handles errors and edge cases.
-5. **Scalability**: How well the code can handle increased load or be extended with new features.
-6. **Code Safety**: How well the code avoids security vulnerabilities and ensures safe execution.
-7. **Code Duplication**: Measures the amount of duplicated code. High duplication can lead to maintenance challenges.
-8. **Cyclomatic Complexity**: Measures the number of linearly independent paths through a program's source code. Higher complexity indicates more potential for errors and harder maintenance.
+1. **Readability**: How easy it is to read and understand the code. This includes proper naming conventions, comments, and overall code structure. Best practices include using meaningful variable names, consistent indentation, and clear comments that explain the purpose of complex code blocks.
+2. **Maintainability**: How easy it is to maintain and update the code. This includes modularity, use of design patterns, and ease of making changes without introducing bugs. Best practices include writing modular code with well-defined interfaces, adhering to design patterns, and avoiding code smells.
+3. **Efficiency**: How well the code performs in terms of speed and resource usage. This includes algorithmic efficiency and optimal use of system resources. Best practices include choosing the right data structures, optimizing algorithms, and minimizing resource consumption.
+4. **Robustness**: How well the code handles errors and edge cases. This includes error handling, input validation, and resilience to unexpected conditions. Best practices include thorough input validation, comprehensive error handling, and writing tests for edge cases.
+5. **Scalability**: How well the code can handle increased load or be extended with new features. This includes the ability to scale horizontally and vertically, and the ease of adding new functionality. Best practices include designing for scalability from the start, using scalable architectures, and writing extensible code.
+6. **Code Safety**: How well the code avoids security vulnerabilities and ensures safe execution. This includes protection against common security threats and adherence to security best practices. Best practices include validating inputs, avoiding common vulnerabilities like SQL injection, and following secure coding guidelines.
+7. **Code Duplication**: Measures the amount of duplicated code. High duplication can lead to maintenance challenges and increased risk of bugs. Best practices include using functions and classes to encapsulate reusable code, and employing tools to detect and eliminate duplicate code.
+8. **Cyclomatic Complexity**: Measures the number of linearly independent paths through a program's source code. Higher complexity indicates more potential for errors and harder maintenance. Best practices include keeping functions small and focused, using control structures judiciously, and refactoring complex code.
 
 Please assign a rating between 0 and 5 for each attribute based on the following scale:
 - Zero stars: the code does not meet the attribute at all
@@ -41,8 +41,9 @@ Please assign a rating between 0 and 5 for each attribute based on the following
 - Four stars: the code meets the attribute well
 - Five stars: the code meets the attribute very well
 
-The `token_usage` is a total amount of consumed tokens to process the entire request. The token_usage is a measure of the computational cost of the evaluation.
-Limit the `description` to 200 words, be very precises and clear about the result.
+The `token_usage` should accurately reflect the total number of tokens consumed to process the entire request. Ensure that the token count includes both input and output tokens.
+
+Limit the `description` to 100 words, focusing on the lowest score only. Be very precise and clear about the result.
 
 Return the response in the following JSON format:
 {
